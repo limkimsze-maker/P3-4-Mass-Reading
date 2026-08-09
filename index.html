@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mass Reading Weightlifting Challenge</title>
+<style>
+:root{
+  --blue:#147ec1;
+  --deep:#075b93;
+  --sky:#eef8ff;
+  --ink:#26374a;
+  --green:#20a45b;
+  --red:#d24e4e;
+  --p1:#438fe8;
+  --p2:#ee9137;
+  --gold:#f0af20;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif;
+  background:linear-gradient(#ecf8ff,#fff);
+  color:var(--ink)
+}
+body{padding:8px}
+button,input{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+.app{
+  max-width:1240px;height:calc(100vh - 16px);margin:auto;
+  background:#fff;border:2px solid #cfe9fb;border-radius:24px;
+  overflow:hidden;box-shadow:0 12px 34px #4c8fb521;
+  display:flex;flex-direction:column
+}
+header{
+  flex:0 0 auto;background:var(--blue);color:#fff;padding:10px 16px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px
+}
+header h1{margin:0;font-size:clamp(22px,2.8vw,36px)}
+header .sub{font-size:12px;line-height:1.25;text-align:right}
+main{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column}
+.screen{display:none;height:100%;min-height:0}
+.screen.active{display:flex}
+.card{border:2px solid #d7edf9;border-radius:20px;background:#fff;box-shadow:0 7px 18px #4d8fb514}
+.hidden{display:none!important}
+
+/* HOME */
+#home{align-items:stretch}
+.homeGrid{flex:1;min-height:0;display:grid;grid-template-columns:1.05fr .95fr;gap:10px}
+.intro,.preview{padding:18px;overflow:hidden}
+.intro h2{margin:0;color:var(--deep);font-size:clamp(28px,4.4vw,52px);line-height:1.02}
+.intro p{font-size:clamp(15px,1.7vw,21px);line-height:1.42;margin:10px 0}
+.modeRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.modeBtn{
+  border:0;border-radius:18px;color:#fff;padding:18px 10px;
+  font-size:clamp(20px,2.2vw,28px);font-weight:900;box-shadow:0 6px 0 #0002
+}
+.modeBtn.one{background:var(--p1)}
+.modeBtn.two{background:linear-gradient(90deg,var(--p1) 50%,var(--p2) 50%)}
+.modeBtn:active{transform:translateY(3px);box-shadow:0 3px 0 #0002}
+.preview{background:linear-gradient(150deg,#fff,#eef9ff)}
+.preview h3{margin:0 0 8px;color:var(--deep);font-size:clamp(22px,2.4vw,30px)}
+.preview ul{font-size:clamp(14px,1.5vw,18px);line-height:1.5;margin:0 0 8px 20px;padding:0}
+.previewArt{
+  height:200px;border:2px solid #d7ecfa;border-radius:18px;background:#fff;
+  display:flex;align-items:center;justify-content:center;overflow:hidden
+}
+.note{font-size:12px;color:#6b7f90;text-align:center;margin-top:8px;line-height:1.3}
+
+/* GAME */
+#game{flex-direction:column;gap:7px}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.btnRow{display:flex;gap:8px}
+.smallbtn{
+  border:0;background:#eaf6ff;color:#075f9f;border-radius:11px;padding:8px 12px;
+  font-weight:900;font-size:14px
+}
+.statusline{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.score{padding:8px 12px;border:2px solid #dceeff;border-radius:13px;background:#fff;font-weight:900}
+.score.p1{border-color:#b8d6ff}.score.p2{border-color:#ffc79a;text-align:right}
+.round{font-weight:900;color:#5f7485;text-align:center}
+.progress{height:8px;background:#e9f3f9;border-radius:999px;overflow:hidden}
+.progress div{height:100%;background:var(--blue);width:0;transition:.25s}
+
+.gameGrid{
+  flex:1;min-height:0;
+  display:grid;grid-template-columns:minmax(0,1.2fr) minmax(330px,.8fr);gap:8px
+}
+.questionCard{
+  min-height:0;padding:12px;display:flex;flex-direction:column;overflow:hidden
+}
+.badges{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{padding:6px 12px;border-radius:999px;font-weight:900;background:#eaf7ff;color:#0767aa}
+.turn.p1{background:#edf5ff;color:#3372bc;border:2px solid #bfd8ff}
+.turn.p2{background:#fff4e9;color:#c16e18;border:2px solid #ffd2a3}
+#question{
+  text-align:center;font-weight:900;font-size:clamp(21px,2.6vw,31px);line-height:1.15;
+  margin:8px 0
+}
+.scaleArea{
+  flex:1;min-height:0;border:2px solid #d9edfa;border-radius:18px;background:#fbfeff;
+  display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden
+}
+.scaleSvg{width:min(660px,100%);height:100%;max-height:360px}
+.answerRow{
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+  margin-top:10px;font-size:clamp(20px,2.4vw,28px);font-weight:900
+}
+.blank{
+  width:105px;height:50px;border:3px solid #b6d8f0;border-radius:14px;background:#fff;
+  text-align:center;font-weight:900;font-size:clamp(20px,2.3vw,28px);color:var(--ink)
+}
+.blank.correct{border-color:var(--green);background:#edf9f2;color:#08743a}
+.blank.wrong{border-color:var(--red);background:#fff1f1;color:#b33030}
+.actions{display:flex;justify-content:center;gap:10px;margin-top:8px}
+.action{
+  border:0;border-radius:13px;padding:9px 18px;background:var(--blue);color:#fff;
+  font-weight:900;font-size:18px
+}
+.action.alt{background:#6d80a6}
+.feedback{text-align:center;min-height:26px;font-weight:900;font-size:18px;margin-top:6px}
+.explain{text-align:center;min-height:30px;color:#637486;font-size:14px;line-height:1.35}
+
+.lifterCard{
+  min-height:0;padding:10px;display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(#fbfdff,#f3faff)
+}
+.lifterTop{display:flex;justify-content:center;gap:10px;align-items:center;flex-wrap:wrap}
+.lifterName{
+  font-weight:900;font-size:clamp(18px,2vw,24px);padding:6px 12px;border-radius:999px
+}
+.lifterName.p1{background:#edf5ff;color:#3372bc}
+.lifterName.p2{background:#fff4e9;color:#c16e18}
+.streak{font-size:14px;font-weight:900;color:#8c6c13;min-height:20px;text-align:center}
+.lifterStage{
+  flex:1;min-height:0;display:flex;align-items:flex-end;justify-content:center;
+  position:relative;border-radius:18px;overflow:hidden;
+  background:linear-gradient(#edf8ff 0 72%,#d7efcb 72% 100%);
+  margin-top:8px
+}
+.lifterSvg{width:95%;height:95%}
+.floorLine{position:absolute;left:7%;right:7%;bottom:18%;height:4px;background:#7fb26b;border-radius:99px}
+.resultText{text-align:center;font-weight:900;font-size:18px;min-height:26px;margin-top:6px;color:#5a6c7a}
+
+/* RESULT */
+#results{align-items:center;justify-content:center}
+.results{width:min(680px,100%);padding:28px;text-align:center}
+.trophy{font-size:72px}
+.results h2{margin:0 0 10px;color:var(--deep);font-size:clamp(30px,4vw,50px)}
+.results p{font-size:clamp(18px,2vw,23px);line-height:1.45}
+.bigbtn{border:0;border-radius:14px;padding:12px 20px;margin:5px;background:var(--blue);color:#fff;font-size:19px;font-weight:900}
+.gold{background:#d99b16}
+
+@media(max-width:900px){
+  .homeGrid{grid-template-columns:1fr}.preview{display:none}
+  .gameGrid{grid-template-columns:1fr;grid-template-rows:minmax(0,1.2fr) minmax(180px,.8fr)}
+  .lifterStage{min-height:180px}
+}
+@media(max-width:700px){
+  body{padding:0}.app{height:100vh;border-radius:0}
+  header{padding:8px 12px}
+  main{padding:8px}
+  .gameGrid{grid-template-rows:minmax(0,1.35fr) minmax(160px,.65fr)}
+  .blank{width:88px;height:44px}
+}
+@media(max-height:760px){
+  .questionCard,.lifterCard{padding:8px}
+  .scaleSvg{max-height:280px}
+  #question{font-size:20px;margin:5px 0}
+  .blank{height:42px}
+  .actions{margin-top:5px}
+  .feedback{font-size:16px;margin-top:4px}
+  .explain{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>🏋️ Mass Reading Weightlifting Challenge</h1>
+  <div class="sub">Read kilograms and grams from a 5 kg scale<br>1 Player or 2 Players</div>
+</header>
+
+<main>
+<section id="home" class="screen active">
+  <div class="homeGrid">
+    <div class="card intro">
+      <h2>Read the Scale. Lift the Weight!</h2>
+      <p>Read the weighing scale carefully and fill in the mass in <b>kilograms and grams</b>.</p>
+
+      <div class="modeRow">
+        <button class="modeBtn one" onclick="startGame(1)">👤 1 Player</button>
+        <button class="modeBtn two" onclick="startGame(2)">👥 2 Players</button>
+      </div>
+
+      <div class="note">
+        Correct answer: the weightlifter lifts successfully. Wrong answer: the lift fails.<br>
+        In 2-player mode, players take turns.
+      </div>
+    </div>
+
+    <div class="card preview">
+      <h3>What pupils practise</h3>
+      <ul>
+        <li>Read a <b>5 kg circular scale</b></li>
+        <li>Recognise that each small interval is <b>100 g</b></li>
+        <li>Write a mass in <b>kg and g</b></li>
+        <li>Read values such as <b>2 kg 300 g</b>, <b>3 kg 700 g</b> and <b>4 kg 900 g</b></li>
+      </ul>
+      <div class="previewArt" id="previewArt"></div>
+    </div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <div class="controls">
+    <div class="btnRow">
+      <button class="smallbtn" onclick="goHome()">← Home</button>
+      <button class="smallbtn" onclick="restart()">↻ New Game</button>
+    </div>
+    <button class="smallbtn" id="soundBtn" onclick="toggleSound()">🔊 Sound On</button>
+  </div>
+
+  <div class="statusline">
+    <div class="score p1" id="score1">Player 1: 0</div>
+    <div class="round" id="round">1 / 10</div>
+    <div class="score p2" id="score2">Player 2: 0</div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+
+  <div class="gameGrid">
+    <div class="card questionCard">
+      <div class="badges">
+        <div class="badge">Read mass</div>
+        <div class="badge turn p1" id="turnBanner">👤 Your Turn</div>
+      </div>
+
+      <div id="question">What is the mass in kilograms and grams?</div>
+
+      <div class="scaleArea" id="scaleArea"></div>
+
+      <div class="answerRow">
+        <input id="kgInput" class="blank" inputmode="numeric" autocomplete="off" aria-label="kilograms">
+        <span>kg</span>
+        <input id="gInput" class="blank" inputmode="numeric" autocomplete="off" aria-label="grams">
+        <span>g</span>
+      </div>
+
+      <div class="actions">
+        <button id="checkBtn" class="action" onclick="checkAnswer()">Check Answer</button>
+        <button id="nextBtn" class="action alt hidden" onclick="nextQuestion()">Next →</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="explain" id="explain"></div>
+    </div>
+
+    <div class="card lifterCard">
+      <div class="lifterTop">
+        <div id="lifterName" class="lifterName p1">Your Weightlifter</div>
+      </div>
+      <div class="streak" id="streak"></div>
+      <div class="lifterStage">
+        <div class="floorLine"></div>
+        <svg class="lifterSvg" id="lifterSvg" viewBox="0 0 420 360" aria-label="weightlifter">
+          <!-- READY POSE -->
+          <g id="readyPose">
+            <ellipse cx="210" cy="309" rx="92" ry="14" fill="#bdd4b4" opacity=".55"/>
+
+            <!-- legs -->
+            <line x1="190" y1="236" x2="170" y2="284" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="230" y1="236" x2="250" y2="284" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="170" y1="284" x2="156" y2="304" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="250" y1="284" x2="264" y2="304" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="148" y1="307" x2="177" y2="307" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+            <line x1="243" y1="307" x2="272" y2="307" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+
+            <!-- body -->
+            <path id="readyTorso" d="M182 154 Q210 140 238 154 L247 230 Q210 245 173 230 Z"
+                  fill="#438fe8" stroke="#26374a" stroke-width="5"/>
+
+            <!-- head -->
+            <circle cx="210" cy="119" r="31" fill="#f0b782" stroke="#26374a" stroke-width="5"/>
+            <path d="M184 112 Q210 82 236 112" fill="#26374a"/>
+            <circle cx="198" cy="120" r="3" fill="#26374a"/>
+            <circle cx="222" cy="120" r="3" fill="#26374a"/>
+            <path id="readyMouth" d="M198 134 Q210 142 222 134" fill="none" stroke="#26374a" stroke-width="4" stroke-linecap="round"/>
+
+            <!-- relaxed arms reaching toward bar -->
+            <line x1="184" y1="170" x2="170" y2="212" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="170" y1="212" x2="160" y2="256" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="236" y1="170" x2="250" y2="212" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="250" y1="212" x2="260" y2="256" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <circle cx="160" cy="256" r="10" fill="#f0b782" stroke="#26374a" stroke-width="3"/>
+            <circle cx="260" cy="256" r="10" fill="#f0b782" stroke="#26374a" stroke-width="3"/>
+
+            <!-- barbell ON THE FLOOR -->
+            <g>
+              <line x1="88" y1="278" x2="332" y2="278" stroke="#444b55" stroke-width="12" stroke-linecap="round"/>
+              <rect x="42" y="238" width="30" height="80" rx="7" fill="#26374a"/>
+              <rect x="72" y="252" width="20" height="52" rx="5" fill="#53606d"/>
+              <rect x="348" y="238" width="30" height="80" rx="7" fill="#26374a"/>
+              <rect x="328" y="252" width="20" height="52" rx="5" fill="#53606d"/>
+            </g>
+          </g>
+
+          <!-- SUCCESSFUL OVERHEAD LIFT -->
+          <g id="liftedPose" style="display:none">
+            <ellipse cx="210" cy="309" rx="92" ry="14" fill="#bdd4b4" opacity=".55"/>
+
+            <!-- legs -->
+            <line x1="188" y1="232" x2="168" y2="291" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="232" y1="232" x2="252" y2="291" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="151" y1="304" x2="177" y2="304" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+            <line x1="243" y1="304" x2="269" y2="304" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+
+            <!-- body -->
+            <path id="liftedTorso" d="M181 153 Q210 139 239 153 L246 230 Q210 244 174 230 Z"
+                  fill="#438fe8" stroke="#26374a" stroke-width="5"/>
+
+            <!-- head -->
+            <circle cx="210" cy="122" r="31" fill="#f0b782" stroke="#26374a" stroke-width="5"/>
+            <path d="M184 115 Q210 85 236 115" fill="#26374a"/>
+            <circle cx="198" cy="123" r="3" fill="#26374a"/>
+            <circle cx="222" cy="123" r="3" fill="#26374a"/>
+            <path d="M198 136 Q210 127 222 136" fill="none" stroke="#26374a" stroke-width="4" stroke-linecap="round"/>
+
+            <!-- ARMS MATCHING THE RED SKETCH:
+                 shoulders -> elbows wide/outward -> forearms inward/up to grip -->
+            <line x1="184" y1="168" x2="142" y2="127" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="142" y1="127" x2="166" y2="68" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="236" y1="168" x2="278" y2="127" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="278" y1="127" x2="254" y2="68" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+
+            <!-- hands -->
+            <circle cx="166" cy="68" r="10" fill="#f0b782" stroke="#26374a" stroke-width="3"/>
+            <circle cx="254" cy="68" r="10" fill="#f0b782" stroke="#26374a" stroke-width="3"/>
+
+            <!-- BARBELL OVER THE HEAD -->
+            <g>
+              <line x1="82" y1="55" x2="338" y2="55" stroke="#444b55" stroke-width="12" stroke-linecap="round"/>
+              <rect x="38" y="14" width="31" height="82" rx="7" fill="#26374a"/>
+              <rect x="69" y="28" width="21" height="54" rx="5" fill="#53606d"/>
+              <rect x="351" y="14" width="31" height="82" rx="7" fill="#26374a"/>
+              <rect x="330" y="28" width="21" height="54" rx="5" fill="#53606d"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="resultText" id="liftResult">Ready to lift!</div>
+    </div>
+  </div>
+</section>
+
+<section id="results" class="screen">
+  <div class="card results">
+    <div class="trophy">🏆</div>
+    <h2 id="resultTitle">Great Work!</h2>
+    <p id="resultText"></p>
+    <button class="bigbtn" onclick="restart()">Play Again</button>
+    <button class="bigbtn gold" onclick="goHome()">Choose Mode</button>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const TOTAL = 10;
+let mode = 1;
+let round = 0;
+let currentPlayer = 0;
+let scores = [0,0];
+let questions = [];
+let answered = false;
+let soundOn = true;
+let audioCtx = null;
+
+// ---------- sound ----------
+function initAudio(){
+  if(audioCtx) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if(Ctx) audioCtx = new Ctx();
+}
+function tone(freq,dur=.1,type="triangle",vol=.04,delay=0){
+  if(!soundOn) return;
+  initAudio();
+  if(!audioCtx) return;
+  const t = audioCtx.currentTime + delay;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type=type;
+  o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t); o.stop(t+dur+.02);
+}
+function correctSound(){ tone(660,.08); tone(880,.12,"triangle",.045,.09); }
+function wrongSound(){ tone(210,.12,"sawtooth",.045); tone(160,.18,"sawtooth",.035,.11); }
+function liftSound(){ tone(300,.06,"square",.03); tone(420,.08,"square",.03,.07); tone(550,.1,"triangle",.035,.14); }
+function toggleSound(){
+  soundOn=!soundOn;
+  document.getElementById("soundBtn").textContent=soundOn?"🔊 Sound On":"🔇 Sound Off";
+}
+
+// ---------- helpers ----------
+function show(id){
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function goHome(){ show("home"); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+function startGame(m){
+  mode=m;
+  initAudio();
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
+  restart();
+}
+function restart(){
+  round=0;
+  currentPlayer=0;
+  scores=[0,0];
+  questions=buildQuestions();
+  document.getElementById("score2").style.visibility=mode===2?"visible":"hidden";
+  show("game");
+  renderQuestion();
+}
+function buildQuestions(){
+  // Avoid exact whole kilograms so every question requires both kg and g reading.
+  const possible = [];
+  for(let grams=100; grams<=4900; grams+=100){
+    if(grams%1000!==0) possible.push(grams);
+  }
+  return shuffle(possible).slice(0,TOTAL).map(totalGrams=>({
+    totalGrams,
+    kg:Math.floor(totalGrams/1000),
+    g:totalGrams%1000
+  }));
+}
+
+// ---------- scale ----------
+function scaleSVG(totalGrams){
+  const max=5000;
+  const cx=350, cy=175, r=128;
+  const startDeg=-90;
+  const sweep=360;
+  let minor="";
+  let major="";
+  let labels="";
+
+  for(let i=0;i<50;i++){
+    const deg=startDeg + i*(sweep/50);
+    const a=deg*Math.PI/180;
+    const isMajor=i%10===0;
+    const isMid=i%5===0 && !isMajor;
+
+    const inner=r-(isMajor?24:(isMid?18:12));
+    const x1=cx+Math.cos(a)*inner;
+    const y1=cy+Math.sin(a)*inner;
+    const x2=cx+Math.cos(a)*r;
+    const y2=cy+Math.sin(a)*r;
+
+    const line=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isMajor?'#075b93':'#2f80d1'}" stroke-width="${isMajor?5:(isMid?4:2.5)}" stroke-linecap="round"/>`;
+    if(isMajor) major+=line; else minor+=line;
+  }
+
+  // 0,1,2,3,4 placed around the dial; "5 kg" in the centre like the worksheet example.
+  for(let k=0;k<5;k++){
+    const deg=startDeg + k*(sweep/5);
+    const a=deg*Math.PI/180;
+    const tx=cx+Math.cos(a)*(r-40);
+    const ty=cy+Math.sin(a)*(r-40)+7;
+    labels+=`<text x="${tx}" y="${ty}" font-size="23" text-anchor="middle" font-weight="900" fill="#17324b">${k}</text>`;
+  }
+
+  const pointerDeg=startDeg + (totalGrams/max)*sweep;
+  const pa=pointerDeg*Math.PI/180;
+  const px=cx+Math.cos(pa)*(r-34);
+  const py=cy+Math.sin(pa)*(r-34);
+
+  return `<svg class="scaleSvg" viewBox="0 0 700 360" aria-label="5 kilogram weighing scale">
+    <!-- scale body -->
+    <rect x="186" y="284" width="328" height="52" rx="16" fill="#edf8ff" stroke="#147ec1" stroke-width="5"/>
+    <rect x="205" y="264" width="290" height="30" rx="8" fill="#f7fbff" stroke="#147ec1" stroke-width="4"/>
+    <circle cx="${cx}" cy="${cy}" r="${r+8}" fill="#ffffff" stroke="#147ec1" stroke-width="8"/>
+    <circle cx="${cx}" cy="${cy}" r="${r-3}" fill="#fbfeff" stroke="#8ac7eb" stroke-width="2"/>
+
+    ${minor}
+    ${major}
+    ${labels}
+
+    <text x="${cx}" y="${cy-7}" font-size="18" text-anchor="middle" font-weight="900" fill="#17324b">5 kg</text>
+
+    <!-- pointer -->
+    <line x1="${cx}" y1="${cy}" x2="${px}" y2="${py}" stroke="#e44848" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="11" fill="#e44848"/>
+
+    <!-- feet -->
+    <line x1="245" y1="336" x2="240" y2="350" stroke="#53606d" stroke-width="7" stroke-linecap="round"/>
+    <line x1="455" y1="336" x2="460" y2="350" stroke="#53606d" stroke-width="7" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ---------- weightlifter animation ----------
+function setLifterColors(){
+  const colour=(mode===2 && currentPlayer===1) ? "#e35757" : "#438fe8";
+  document.getElementById("readyTorso").setAttribute("fill",colour);
+  document.getElementById("liftedTorso").setAttribute("fill",colour);
+}
+function resetLifter(){
+  const ready=document.getElementById("readyPose");
+  const lifted=document.getElementById("liftedPose");
+
+  ready.getAnimations().forEach(a=>a.cancel());
+  lifted.getAnimations().forEach(a=>a.cancel());
+
+  ready.style.display="";
+  ready.style.opacity="1";
+  ready.style.transform="";
+  lifted.style.display="none";
+  lifted.style.opacity="1";
+  lifted.style.transform="";
+
+  document.getElementById("readyMouth").setAttribute("d","M198 134 Q210 142 222 134");
+  document.getElementById("liftResult").textContent="Ready to lift!";
+  setLifterColors();
+}
+function successfulLift(){
+  liftSound();
+  const ready=document.getElementById("readyPose");
+  const lifted=document.getElementById("liftedPose");
+
+  ready.animate([
+    {transform:"translateY(0)",opacity:1},
+    {transform:"translateY(6px)",opacity:.35}
+  ],{duration:240,easing:"ease-in",fill:"forwards"}).onfinish=()=>{
+    ready.style.display="none";
+    lifted.style.display="";
+    lifted.animate([
+      {transform:"translateY(12px)",opacity:.2},
+      {transform:"translateY(0)",opacity:1}
+    ],{duration:430,easing:"ease-out",fill:"forwards"});
+  };
+
+  document.getElementById("liftResult").textContent="🏆 Successful lift!";
+}
+function failedLift(){
+  wrongSound();
+  const ready=document.getElementById("readyPose");
+
+  ready.animate([
+    {transform:"translateX(0)"},
+    {transform:"translateX(-6px)"},
+    {transform:"translateX(7px)"},
+    {transform:"translateX(0)"}
+  ],{duration:460,easing:"ease-in-out"});
+
+  document.getElementById("readyMouth").setAttribute("d","M198 138 Q210 130 222 138");
+  document.getElementById("liftResult").textContent="💢 Lift failed!";
+}
+
+// ---------- gameplay ----------
+// ---------- gameplay ----------
+// ---------- gameplay ----------
+// ---------- gameplay ----------
+function renderQuestion(){
+  answered=false;
+  resetLifter();
+
+  const q=questions[round];
+  document.getElementById("round").textContent=`${round+1} / ${TOTAL}`;
+  document.getElementById("bar").style.width=`${(round/TOTAL)*100}%`;
+  document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+  document.getElementById("score2").textContent=`Player 2: ${scores[1]}`;
+  document.getElementById("scaleArea").innerHTML=scaleSVG(q.totalGrams);
+
+  const kg=document.getElementById("kgInput");
+  const g=document.getElementById("gInput");
+  kg.value=""; g.value="";
+  kg.disabled=false; g.disabled=false;
+  kg.className="blank"; g.className="blank";
+
+  const check=document.getElementById("checkBtn");
+  check.disabled=false;
+  document.getElementById("nextBtn").classList.add("hidden");
+  document.getElementById("feedback").textContent="";
+  document.getElementById("explain").textContent="";
+
+  const turn=document.getElementById("turnBanner");
+  const lifterName=document.getElementById("lifterName");
+
+  if(mode===2){
+    turn.textContent=currentPlayer===0?"🔵 Player 1's Turn":"🟠 Player 2's Turn";
+    turn.className="badge turn "+(currentPlayer===0?"p1":"p2");
+    lifterName.textContent=currentPlayer===0?"Player 1's Weightlifter":"Player 2's Weightlifter";
+    lifterName.className="lifterName "+(currentPlayer===0?"p1":"p2");
+  }else{
+    turn.textContent="👤 Your Turn";
+    turn.className="badge turn p1";
+    lifterName.textContent="Your Weightlifter";
+    lifterName.className="lifterName p1";
+  }
+
+  setLifterColors();
+  kg.focus();
+}
+function valueOf(id){
+  const t=document.getElementById(id).value.trim();
+  if(t==="") return null;
+  if(!/^\d+$/.test(t)) return NaN;
+  return Number(t);
+}
+function checkAnswer(){
+  if(answered) return;
+
+  const kgVal=valueOf("kgInput");
+  const gVal=valueOf("gInput");
+
+  if(kgVal===null || gVal===null){
+    const f=document.getElementById("feedback");
+    f.textContent="⚠️ Fill in both blanks first.";
+    f.style.color="#b36f14";
+    return;
+  }
+
+  answered=true;
+  const q=questions[round];
+  const kgBox=document.getElementById("kgInput");
+  const gBox=document.getElementById("gInput");
+
+  kgBox.disabled=true; gBox.disabled=true;
+  document.getElementById("checkBtn").disabled=true;
+
+  const kgOK=kgVal===q.kg;
+  const gOK=gVal===q.g;
+  kgBox.classList.add(kgOK?"correct":"wrong");
+  gBox.classList.add(gOK?"correct":"wrong");
+
+  const fb=document.getElementById("feedback");
+  const explain=document.getElementById("explain");
+
+  if(kgOK && gOK){
+    correctSound();
+    scores[mode===2?currentPlayer:0]++;
+    fb.textContent="✅ Correct!";
+    fb.style.color="#14884b";
+    explain.textContent=`The scale shows ${q.kg} kg ${q.g} g.`;
+    successfulLift();
+  }else{
+    fb.textContent="❌ Not quite.";
+    fb.style.color="#b43b3b";
+    explain.textContent=`The correct reading is ${q.kg} kg ${q.g} g. Each small interval represents 100 g.`;
+    failedLift();
+  }
+
+  document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+  document.getElementById("score2").textContent=`Player 2: ${scores[1]}`;
+  document.getElementById("nextBtn").classList.remove("hidden");
+}
+function nextQuestion(){
+  round++;
+  if(round>=TOTAL){ finish(); return; }
+  if(mode===2) currentPlayer=currentPlayer===0?1:0;
+  renderQuestion();
+}
+function finish(){
+  document.getElementById("bar").style.width="100%";
+  show("results");
+
+  if(mode===1){
+    const s=scores[0];
+    document.getElementById("resultTitle").textContent=s>=8?"Weightlifting Champion!":s>=5?"Great Lifting!":"Keep Training!";
+    document.getElementById("resultText").innerHTML=
+      `You read <b>${s} out of ${TOTAL}</b> scales correctly.<br>`+
+      (s>=8?"Excellent reading of kilograms and grams!":s>=5?"You are getting confident with the scale.":"Try another round and watch the 100 g intervals carefully.");
+  }else{
+    const a=scores[0],b=scores[1];
+    document.getElementById("resultTitle").textContent=a===b?"It's a Draw!":`Player ${a>b?1:2} Wins!`;
+    document.getElementById("resultText").innerHTML=
+      `Player 1: <b>${a}</b><br>Player 2: <b>${b}</b><br><br>Players took turns reading the weighing scale.`;
+  }
+}
+
+// Enter key checks answer
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && document.getElementById("game").classList.contains("active") && !answered){
+    e.preventDefault();
+    checkAnswer();
+  }
+});
+
+document.getElementById("previewArt").innerHTML=scaleSVG(2300);
+</script>
+</body>
+</html>
