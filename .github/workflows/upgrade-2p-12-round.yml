@@ -1,4 +1,4 @@
-name: Upgrade 2P to 12 Questions
+name: Keep 2P on 12 Questions v2
 on:
   push:
     branches: [main]
@@ -12,11 +12,14 @@ jobs:
       - run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p=Path('index.html'); s=p.read_text(encoding='utf-8')
           s=s.replace('const TOTAL = 10;','let TOTAL = 10;',1).replace('const TOTAL=10;','let TOTAL=10;',1)
-          hook='<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v1.js?v=20260811a"></script>\n'
+          # Never re-add the retired v1 runtime.
+          s=re.sub(r'\s*<script src="https://limkimsze-maker\.github\.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v1\.js\?v=[^"]+"></script>','',s)
+          v2='<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v2.js?v=20260812b"></script>\n'
           marker='<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-medal-hook-v4.js'
-          if 'sports-fiesta-2p-12-round-v1.js' not in s:s=s.replace(marker,hook+marker,1)
+          if 'sports-fiesta-2p-12-round-v2.js' not in s:s=s.replace(marker,v2+marker,1)
           p.write_text(s,encoding='utf-8')
           PY
       - run: |
@@ -24,5 +27,6 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html
-          git commit -m "Use 12 questions for 2-player rounds"
+          git commit -m "Keep 2-player rounds on v2 runtime"
+          git pull --rebase origin main
           git push
