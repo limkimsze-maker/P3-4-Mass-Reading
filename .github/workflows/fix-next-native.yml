@@ -1,0 +1,53 @@
+name: Fix Practice 4 Next Natively
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-next-native.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch native Next flow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          # Remove workaround layers for Next on Practice 4.
+          lines=[]
+          for line in s.splitlines():
+              if 'practice4-next-fix-v1.js' in line: continue
+              if 'sports-fiesta-next-guard-v1.js' in line: continue
+              lines.append(line)
+          s='\n'.join(lines)+'\n'
+
+          old='document.getElementById("nextBtn").classList.remove("hidden");\n}\nfunction nextQuestion(){\n  round++;'
+          new='''const nextBtn=document.getElementById("nextBtn");
+  nextBtn.disabled=false;
+  nextBtn.removeAttribute("disabled");
+  nextBtn.classList.remove("hidden");
+}
+function nextQuestion(){
+  if(!answered) return;
+  const nextBtn=document.getElementById("nextBtn");
+  if(nextBtn){ nextBtn.disabled=true; nextBtn.classList.add("hidden"); }
+  round++;'''
+          if old not in s:
+              raise SystemExit('Expected native Next block not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Fix Practice 4 Next flow in native game code'
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && exit 0
+            sleep 2
+          done
+          exit 1
