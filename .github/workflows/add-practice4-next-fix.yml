@@ -1,0 +1,30 @@
+name: Add Practice 4 Next Fix
+on:
+  push:
+    paths:
+      - '.github/workflows/add-practice4-next-fix.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add final Next handler
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          tag='<script src="practice4-next-fix-v1.js?v=20260812a"></script>'
+          if 'practice4-next-fix-v1.js' not in s:
+              s=s.replace('</body>',tag+'\n</body>')
+              p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Load Practice 4 protected Next handler'
+          git push
