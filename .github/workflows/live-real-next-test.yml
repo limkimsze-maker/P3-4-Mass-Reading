@@ -1,0 +1,47 @@
+name: Live Real Practice 4 Next Test
+on: [push]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Selenium
+        run: python -m pip install --disable-pip-version-check selenium
+      - name: Test real answer then Next in 1P and 2P
+        run: |
+          python - <<'PY'
+          import time,urllib.request
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          url='https://limkimsze-maker.github.io/P3-4-Mass-Reading/'
+          for _ in range(30):
+            try:
+              h=urllib.request.urlopen(url+'?t='+str(time.time()),timeout=15).read().decode('utf-8','ignore')
+              if 'practice4-next-native-v2.js' in h: break
+            except Exception: pass
+            time.sleep(4)
+          else: raise SystemExit('Updated P4 page not live')
+          o=Options();o.add_argument('--headless=new');o.add_argument('--no-sandbox');o.add_argument('--disable-dev-shm-usage');o.add_argument('--window-size=1440,1000')
+          d=webdriver.Chrome(options=o)
+          try:
+            for mode in (1,2):
+              d.get(url+'?t='+str(time.time()));time.sleep(1.2)
+              d.execute_script(f'startGame({mode})');time.sleep(.5)
+              for step in range(3):
+                before=d.execute_script("return document.getElementById('round').textContent.trim()")
+                total=d.execute_script('return questions[round].totalGrams')
+                kg=total//1000; g=total%1000
+                d.execute_script("document.getElementById('kgInput').value=arguments[0];document.getElementById('gInput').value=arguments[1];",str(kg),str(g))
+                d.find_element('id','checkBtn').click();time.sleep(.25)
+                fb=d.find_element('id','feedback').text
+                if 'Correct' not in fb: raise RuntimeError(f'mode {mode}: correct answer was not accepted: {fb!r}')
+                btn=d.find_element('id','nextBtn')
+                if not btn.is_displayed(): raise RuntimeError(f'mode {mode}: Next not displayed')
+                btn.click();time.sleep(.35)
+                after=d.execute_script("return document.getElementById('round').textContent.trim()")
+                if before==after: raise RuntimeError(f'mode {mode}: Next did not advance: {before!r}')
+                print(f'MODE {mode} STEP {step+1}: PASS {before} -> {after}')
+            print('P4 REAL ANSWER + NEXT PASSED IN 1P AND 2P')
+          finally:d.quit()
+          PY
