@@ -1,0 +1,53 @@
+name: Verify Fixed Practice 4 Full Flow
+on:
+  push:
+    paths:
+      - '.github/workflows/full-native-flow-v2.yml'
+  workflow_dispatch:
+jobs:
+  flow:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [1, 2]
+    runs-on: ubuntu-latest
+    steps:
+      - run: python -m pip install --disable-pip-version-check selenium
+      - name: Play every question through results
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          python - <<'PY'
+          import os,time
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          mode=int(os.environ['MODE']); total=10 if mode==1 else 12
+          o=webdriver.ChromeOptions(); o.add_argument('--headless=new'); o.add_argument('--no-sandbox'); o.add_argument('--disable-dev-shm-usage'); o.add_argument('--window-size=1440,1100')
+          d=webdriver.Chrome(options=o); w=WebDriverWait(d,25)
+          try:
+            time.sleep(15)
+            d.get(f'https://limkimsze-maker.github.io/P3-4-Mass-Reading/?fixedflow={time.time()}')
+            w.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'.modeBtn.one' if mode==1 else '.modeBtn.two'))).click()
+            w.until(lambda x:x.execute_script('return questions.length')==total)
+            print('START',d.execute_script('return {TOTAL, len:questions.length, round};'))
+            for i in range(total):
+              q=d.execute_script('return questions[round];')
+              assert q is not None
+              kg=d.find_element(By.ID,'kgInput'); g=d.find_element(By.ID,'gInput')
+              kg.clear(); kg.send_keys(str(q['kg'])); g.clear(); g.send_keys(str(q['g']))
+              d.find_element(By.ID,'checkBtn').click()
+              w.until(lambda x:'Correct' in x.find_element(By.ID,'feedback').text)
+              nxt=w.until(lambda x:x.find_element(By.ID,'nextBtn') if x.find_element(By.ID,'nextBtn').is_displayed() and x.find_element(By.ID,'nextBtn').is_enabled() else False)
+              nxt.click()
+              if i<total-1:
+                w.until(lambda x:x.execute_script('return round')==i+1)
+                state=d.execute_script('return {round,TOTAL,len:questions.length};')
+                assert state['len']==total, state
+              else:
+                w.until(lambda x:'active' in x.find_element(By.ID,'results').get_attribute('class').split())
+            print(f'PASS mode={mode}: all {total} questions flowed to results')
+          finally:
+            d.quit()
+          PY
