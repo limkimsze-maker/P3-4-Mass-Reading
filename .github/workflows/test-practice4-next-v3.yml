@@ -18,10 +18,13 @@ jobs:
           from selenium.webdriver.common.by import By
           from selenium.webdriver.support.ui import WebDriverWait
           from selenium.webdriver.support import expected_conditions as EC
-          import time, random
+          import random
 
           opts=webdriver.ChromeOptions()
-          opts.add_argument('--headless=new'); opts.add_argument('--no-sandbox'); opts.add_argument('--disable-dev-shm-usage')
+          opts.add_argument('--headless=new')
+          opts.add_argument('--no-sandbox')
+          opts.add_argument('--disable-dev-shm-usage')
+          opts.add_argument('--window-size=1440,1100')
           d=webdriver.Chrome(options=opts)
           wait=WebDriverWait(d,20)
           try:
@@ -35,9 +38,8 @@ jobs:
                 kg=d.find_element(By.ID,'kgInput'); g=d.find_element(By.ID,'gInput')
                 kg.clear(); kg.send_keys(str(q['kg']))
                 g.clear(); g.send_keys(str(q['g']))
-                d.find_element(By.ID,'checkBtn').click()
-                wait.until(lambda x: 'hidden' not in x.find_element(By.ID,'nextBtn').get_attribute('class'))
-                d.find_element(By.ID,'nextBtn').click()
+                wait.until(EC.element_to_be_clickable((By.ID,'checkBtn'))).click()
+                wait.until(EC.element_to_be_clickable((By.ID,'nextBtn'))).click()
                 wait.until(lambda x: x.execute_script('return round')==before+1)
                 shown=d.find_element(By.ID,'round').text
                 assert shown.startswith(str(before+2)+' /'), (players,step,before,shown)
