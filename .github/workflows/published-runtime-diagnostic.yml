@@ -1,0 +1,39 @@
+name: Diagnose Published Practice 4 Runtime
+on:
+  push:
+    paths:
+      - '.github/workflows/published-runtime-diagnostic.yml'
+  workflow_dispatch:
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - run: python -m pip install --disable-pip-version-check selenium
+      - name: Print live runtime after starting game
+        run: |
+          python - <<'PY'
+          import time
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          o=webdriver.ChromeOptions(); o.add_argument('--headless=new'); o.add_argument('--no-sandbox'); o.add_argument('--disable-dev-shm-usage'); o.add_argument('--window-size=1440,1100')
+          d=webdriver.Chrome(options=o); w=WebDriverWait(d,20)
+          try:
+            time.sleep(20)
+            d.get(f'https://limkimsze-maker.github.io/P3-4-Mass-Reading/?diag={time.time()}')
+            w.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'.modeBtn.one'))).click()
+            time.sleep(1)
+            data=d.execute_script('''return {
+              TOTAL: typeof TOTAL==='undefined'?null:TOTAL,
+              round: typeof round==='undefined'?null:round,
+              qlen: typeof questions==='undefined'?null:questions.length,
+              freshLen: typeof buildQuestions==='function'?buildQuestions().length:null,
+              start: typeof startGame==='function'?startGame.toString():null,
+              build: typeof buildQuestions==='function'?buildQuestions.toString():null,
+              scripts:[...document.scripts].map(s=>s.src||'[inline]')
+            };''')
+            print('RUNTIME_JSON=',data)
+          finally:
+            d.quit()
+          PY
