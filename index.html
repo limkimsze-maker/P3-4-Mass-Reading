@@ -430,12 +430,22 @@ function restart(){
   renderQuestion();
 }
 function buildQuestions(){
-  // Avoid exact whole kilograms so every question requires both kg and g reading.
-  const possible = [];
-  for(let grams=100; grams<=4900; grams+=100){
-    if(grams%1000!==0) possible.push(grams);
+  // Balanced, unique scale readings. 1P = 10; 2P = 12.
+  const chosen=[];
+  const used=new Set();
+  for(let kg=0;kg<=4;kg++){
+    const band=[];
+    for(let g=100;g<=900;g+=100) band.push(kg*1000+g);
+    shuffle(band).slice(0,2).forEach(v=>{chosen.push(v);used.add(v)});
   }
-  return shuffle(possible).slice(0,TOTAL).map(totalGrams=>({
+  if(TOTAL>chosen.length){
+    const remaining=[];
+    for(let grams=100;grams<=4900;grams+=100){
+      if(grams%1000!==0&&!used.has(grams))remaining.push(grams);
+    }
+    chosen.push(...shuffle(remaining).slice(0,TOTAL-chosen.length));
+  }
+  return shuffle(chosen).slice(0,TOTAL).map(totalGrams=>({
     totalGrams,
     kg:Math.floor(totalGrams/1000),
     g:totalGrams%1000
@@ -695,10 +705,7 @@ document.addEventListener("keydown",e=>{
 
 document.getElementById("previewArt").innerHTML=scaleSVG(2300);
 </script>
-<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-original-questions-v1.js?v=20260813c" data-practice="4"></script>
-<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-random-questions-v1.js?v=20260813c" data-practice="4"></script>
-<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-back-to-hub-v1.js?v=20260813c"></script>
-<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v2.js?v=20260812b"></script>
-<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-medal-hook-v4.js?v=20260810d" data-practice="4" data-sport="Weightlifting"></script>
+<script src="practice4-back-to-hub-local-v1.js?v=20260813a"></script>
+<script src="practice4-progress-local-v1.js?v=20260813a"></script>
 </body>
 </html>
