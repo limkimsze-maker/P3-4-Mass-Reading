@@ -1,0 +1,47 @@
+name: Test Practice 4 Next v3
+on:
+  push:
+    paths:
+      - '.github/workflows/test-practice4-next-v3.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Selenium
+        run: python -m pip install --disable-pip-version-check selenium
+      - name: Test 1P and 2P consecutive Next flow
+        run: |
+          python - <<'PY'
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          import time, random
+
+          opts=webdriver.ChromeOptions()
+          opts.add_argument('--headless=new'); opts.add_argument('--no-sandbox'); opts.add_argument('--disable-dev-shm-usage')
+          d=webdriver.Chrome(options=opts)
+          wait=WebDriverWait(d,20)
+          try:
+            for players in (1,2):
+              url='https://limkimsze-maker.github.io/P3-4-Mass-Reading/?audit='+str(random.random())
+              d.get(url)
+              wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f'.modeBtn.{"one" if players==1 else "two"}'))).click()
+              for step in range(5):
+                q=d.execute_script('return {kg:questions[round].kg,g:questions[round].g,round:round};')
+                before=q['round']
+                kg=d.find_element(By.ID,'kgInput'); g=d.find_element(By.ID,'gInput')
+                kg.clear(); kg.send_keys(str(q['kg']))
+                g.clear(); g.send_keys(str(q['g']))
+                d.find_element(By.ID,'checkBtn').click()
+                wait.until(lambda x: 'hidden' not in x.find_element(By.ID,'nextBtn').get_attribute('class'))
+                d.find_element(By.ID,'nextBtn').click()
+                wait.until(lambda x: x.execute_script('return round')==before+1)
+                shown=d.find_element(By.ID,'round').text
+                assert shown.startswith(str(before+2)+' /'), (players,step,before,shown)
+              print(f'PASS {players}P: 5 consecutive Next clicks')
+          finally:
+            d.quit()
+          PY
