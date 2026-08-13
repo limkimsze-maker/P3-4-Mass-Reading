@@ -1,8 +1,0 @@
-name: Shared Originality Layer Disabled for Practice 4
-on:
-  workflow_dispatch:
-jobs:
-  disabled:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Practice 4 uses its native balanced random question generator."

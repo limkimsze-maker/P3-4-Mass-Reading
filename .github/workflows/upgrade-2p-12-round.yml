@@ -1,8 +1,0 @@
-name: Shared 2P Runtime Disabled for Practice 4
-on:
-  workflow_dispatch:
-jobs:
-  disabled:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Practice 4 owns its native 10/12 question flow. Do not inject shared 2P runtime."
