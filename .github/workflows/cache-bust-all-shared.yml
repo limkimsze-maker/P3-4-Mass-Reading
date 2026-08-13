@@ -1,0 +1,37 @@
+name: Force Fresh Shared Scripts for Practice 4
+on:
+  push:
+    paths:
+      - '.github/workflows/cache-bust-all-shared.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Atomically bump every shared Sports Fiesta script URL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python - <<'PY'
+          import os,base64,json,time,urllib.request,urllib.error,re
+          repo=os.environ['REPO']; token=os.environ['GH_TOKEN']; api=f'https://api.github.com/repos/{repo}/contents/index.html'
+          h={'Authorization':f'Bearer {token}','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'sports-fiesta-fix'}
+          names=['sports-fiesta-original-questions-v1.js','sports-fiesta-random-questions-v1.js','sports-fiesta-back-to-hub-v1.js','sports-fiesta-medal-hook-v4.js']
+          for attempt in range(20):
+            with urllib.request.urlopen(urllib.request.Request(api,headers=h)) as r:data=json.load(r)
+            raw=base64.b64decode(data['content']).decode(); s=raw
+            for name in names:
+              s=re.sub(r'('+re.escape(name)+r')\?v=[^"\']+', r'\1?v=20260813c', s)
+            if s==raw: print('Already fresh'); break
+            payload=json.dumps({'message':'Force fresh shared scripts for Practice 4','content':base64.b64encode(s.encode()).decode(),'sha':data['sha']}).encode()
+            req=urllib.request.Request(api,data=payload,headers={**h,'Content-Type':'application/json'},method='PUT')
+            try:
+              with urllib.request.urlopen(req) as r: print('Updated',json.load(r)['commit']['sha']); break
+            except urllib.error.HTTPError as e:
+              if e.code in (409,422): time.sleep(1+attempt/2); continue
+              raise
+          else: raise SystemExit('Could not update')
+          PY
