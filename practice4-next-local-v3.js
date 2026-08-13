@@ -1,3 +1,4 @@
+// Practice 4 Next v3 — direct click ownership, republished 2026-08-13
 (()=>{
   if(window.__practice4NextLocalV3)return;
   window.__practice4NextLocalV3=true;
@@ -7,7 +8,6 @@
     if(!btn)return;
     if(btn.classList.contains('hidden') || btn.disabled)return;
 
-    // Take full ownership of this click so no stale/duplicate handler can interfere.
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -15,8 +15,6 @@
     try{
       if(typeof answered!=='undefined' && !answered)return;
       btn.disabled=true;
-
-      // Advance using Practice 4's own game state.
       round++;
       if(round>=TOTAL){
         finish();
