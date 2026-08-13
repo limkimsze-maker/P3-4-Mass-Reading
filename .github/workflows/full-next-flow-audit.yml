@@ -1,0 +1,62 @@
+name: Full Practice 4 Next Flow Audit
+on:
+  push:
+    paths:
+      - '.github/workflows/full-next-flow-audit.yml'
+  workflow_dispatch:
+jobs:
+  full-flow:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [1, 2]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Selenium
+        run: python -m pip install --disable-pip-version-check selenium
+      - name: Complete full game through every Next click
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          python - <<'PY'
+          import os,time
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+
+          mode=int(os.environ['MODE'])
+          opts=webdriver.ChromeOptions()
+          opts.add_argument('--headless=new')
+          opts.add_argument('--no-sandbox')
+          opts.add_argument('--disable-dev-shm-usage')
+          opts.add_argument('--window-size=1440,1100')
+          d=webdriver.Chrome(options=opts)
+          wait=WebDriverWait(d,20)
+          try:
+            # Allow Pages to publish the new index, and bypass HTML cache.
+            time.sleep(12)
+            d.get(f'https://limkimsze-maker.github.io/P3-4-Mass-Reading/?audit={time.time()}')
+            wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f'.modeBtn.{"one" if mode==1 else "two"}'))).click()
+            expected_total=10 if mode==1 else 12
+            for expected_round in range(expected_total):
+              wait.until(lambda x: x.execute_script('return typeof questions!=="undefined" && questions.length>0'))
+              state=d.execute_script('return {round:round,total:TOTAL,kg:questions[round].kg,g:questions[round].g};')
+              assert state['round']==expected_round, (expected_round,state)
+              assert state['total']==expected_total, state
+              kg=wait.until(EC.presence_of_element_located((By.ID,'kgInput')))
+              g=d.find_element(By.ID,'gInput')
+              kg.clear(); kg.send_keys(str(state['kg']))
+              g.clear(); g.send_keys(str(state['g']))
+              d.find_element(By.ID,'checkBtn').click()
+              wait.until(lambda x: 'Correct' in x.find_element(By.ID,'feedback').text)
+              nxt=wait.until(lambda x: x.find_element(By.ID,'nextBtn') if 'hidden' not in x.find_element(By.ID,'nextBtn').get_attribute('class').split() and x.find_element(By.ID,'nextBtn').is_enabled() else False)
+              nxt.click()
+              if expected_round < expected_total-1:
+                wait.until(lambda x: x.execute_script('return round')==expected_round+1)
+              else:
+                wait.until(lambda x: 'active' in x.find_element(By.ID,'results').get_attribute('class').split())
+            print(f'PASS mode={mode}: completed all {expected_total} questions and every Next click')
+          finally:
+            d.quit()
+          PY
