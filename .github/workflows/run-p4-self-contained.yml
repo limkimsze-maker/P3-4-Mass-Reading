@@ -1,0 +1,18 @@
+name: Run Practice 4 Self Contained Fix
+on:
+  push:
+    paths:
+      - '.github/workflows/run-p4-self-contained.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply atomic Practice 4 fix
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: python tools/make_p4_self_contained.py
