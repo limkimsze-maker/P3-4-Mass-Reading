@@ -1,32 +1,8 @@
-name: Keep 2P on 12 Questions v2
+name: Shared 2P Runtime Disabled for Practice 4
 on:
-  push:
-    branches: [main]
-permissions:
-  contents: write
+  workflow_dispatch:
 jobs:
-  update:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('index.html'); s=p.read_text(encoding='utf-8')
-          s=s.replace('const TOTAL = 10;','let TOTAL = 10;',1).replace('const TOTAL=10;','let TOTAL=10;',1)
-          # Never re-add the retired v1 runtime.
-          s=re.sub(r'\s*<script src="https://limkimsze-maker\.github\.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v1\.js\?v=[^"]+"></script>','',s)
-          v2='<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v2.js?v=20260812b"></script>\n'
-          marker='<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-medal-hook-v4.js'
-          if 'sports-fiesta-2p-12-round-v2.js' not in s:s=s.replace(marker,v2+marker,1)
-          p.write_text(s,encoding='utf-8')
-          PY
-      - run: |
-          if git diff --quiet; then exit 0; fi
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add index.html
-          git commit -m "Keep 2-player rounds on v2 runtime"
-          git pull --rebase origin main
-          git push
+      - run: echo "Practice 4 owns its native 10/12 question flow. Do not inject shared 2P runtime."
