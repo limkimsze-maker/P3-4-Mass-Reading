@@ -1,4 +1,5 @@
 // Practice 4 Next v3 — direct click ownership, corrected re-enable behaviour
+// Republish marker: 2026-08-13 12:15 SGT
 (()=>{
   if(window.__practice4NextLocalV3)return;
   window.__practice4NextLocalV3=true;
@@ -22,8 +23,6 @@
       }
       if(mode===2) currentPlayer=currentPlayer===0?1:0;
       renderQuestion();
-      // Important: the same Next button is reused on the new question.
-      // Re-enable it now; checkAnswer() will reveal it when the new answer is checked.
       btn.disabled=false;
       btn.removeAttribute('disabled');
     }catch(err){
