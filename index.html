@@ -34,10 +34,16 @@ button{cursor:pointer;touch-action:manipulation}
 }
 header{
   flex:0 0 auto;background:var(--blue);color:#fff;padding:10px 16px;
-  display:flex;justify-content:space-between;align-items:center;gap:10px
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px
 }
-header h1{margin:0;font-size:clamp(22px,2.8vw,36px)}
+header h1{margin:0;min-width:0;font-size:clamp(22px,2.8vw,36px)}
 header .sub{font-size:12px;line-height:1.25;text-align:right}
+.hubBtn{
+  display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 11px;
+  border-radius:12px;background:#fff;color:#07558e;text-decoration:none;font-weight:900;
+  font-size:13px;line-height:1;white-space:nowrap;box-shadow:0 3px 0 #0002;border:2px solid #ffffffcc
+}
+.hubBtn:active{transform:translateY(2px)}
 main{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column}
 .screen{display:none;height:100%;min-height:0}
 .screen.active{display:flex}
@@ -158,7 +164,9 @@ main{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column}
 }
 @media(max-width:700px){
   body{padding:0}.app{height:100vh;border-radius:0}
-  header{padding:8px 12px}
+  header{padding:8px 10px;gap:6px}
+  header .sub{display:none}
+  .hubBtn{min-height:34px;padding:7px 8px;font-size:11px}
   main{padding:8px}
   .gameGrid{grid-template-rows:minmax(0,1.35fr) minmax(160px,.65fr)}
   .blank{width:88px;height:44px}
@@ -178,6 +186,7 @@ main{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column}
 <body>
 <div class="app">
 <header>
+  <a class="hubBtn" href="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/" aria-label="Back to Sports Fiesta Practice Hub">← Fiesta Hub</a>
   <h1>🏋️ Mass Reading Weightlifting Challenge</h1>
   <div class="sub">Read kilograms and grams from a 5 kg scale<br>1 Player or 2 Players</div>
 </header>
@@ -326,12 +335,9 @@ main{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column}
             <circle cx="222" cy="123" r="3" fill="#26374a"/>
             <path d="M198 136 Q210 127 222 136" fill="none" stroke="#26374a" stroke-width="4" stroke-linecap="round"/>
 
-            <!-- ARMS MATCHING THE RED SKETCH:
-                 shoulders -> elbows wide/outward -> forearms inward/up to grip -->
-            <line x1="184" y1="168" x2="142" y2="127" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
-            <line x1="142" y1="127" x2="166" y2="68" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
-            <line x1="236" y1="168" x2="278" y2="127" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
-            <line x1="278" y1="127" x2="254" y2="68" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <!-- straight arms locked overhead -->
+            <line x1="184" y1="168" x2="166" y2="68" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <line x1="236" y1="168" x2="254" y2="68" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
 
             <!-- hands -->
             <circle cx="166" cy="68" r="10" fill="#f0b782" stroke="#26374a" stroke-width="3"/>
@@ -375,6 +381,7 @@ let questions = [];
 let answered = false;
 let soundOn = true;
 let audioCtx = null;
+let advancing = false;
 
 // ---------- sound ----------
 function initAudio(){
@@ -574,9 +581,6 @@ function failedLift(){
 }
 
 // ---------- gameplay ----------
-// ---------- gameplay ----------
-// ---------- gameplay ----------
-// ---------- gameplay ----------
 function renderQuestion(){
   answered=false;
   resetLifter();
@@ -595,8 +599,12 @@ function renderQuestion(){
   kg.className="blank"; g.className="blank";
 
   const check=document.getElementById("checkBtn");
+  const next=document.getElementById("nextBtn");
   check.disabled=false;
-  document.getElementById("nextBtn").classList.add("hidden");
+  advancing=false;
+  next.disabled=false;
+  next.removeAttribute("disabled");
+  next.classList.add("hidden");
   document.getElementById("feedback").textContent="";
   document.getElementById("explain").textContent="";
 
@@ -672,13 +680,35 @@ function checkAnswer(){
   document.getElementById("nextBtn").classList.remove("hidden");
 }
 function nextQuestion(){
+  if(!answered || advancing) return;
+  advancing=true;
+  const next=document.getElementById("nextBtn");
+  next.disabled=true;
+  next.classList.add("hidden");
   round++;
   if(round>=TOTAL){ finish(); return; }
   if(mode===2) currentPlayer=currentPlayer===0?1:0;
   renderQuestion();
 }
+function saveHubProgress(){
+  const HUB_KEY="sportsFiestaHubProgress_v1";
+  try{
+    const data=JSON.parse(localStorage.getItem(HUB_KEY)||"{}")||{};
+    const old=data[4]||{};
+    const winner=mode===2?(scores[0]===scores[1]?0:(scores[0]>scores[1]?1:2)):0;
+    data[4]={
+      ...old,completed:true,verified:true,source:"game-v5",
+      pieceEarned:!!old.pieceEarned||mode===1,
+      perfectSingle:!!old.perfectSingle||(mode===1&&scores[0]===TOTAL),
+      updatedAt:new Date().toISOString(),lastMode:mode,lastWinner:winner
+    };
+    localStorage.setItem(HUB_KEY,JSON.stringify(data));
+  }catch(e){ console.warn("Could not save Sports Fiesta progress",e); }
+}
+
 function finish(){
   document.getElementById("bar").style.width="100%";
+  saveHubProgress();
   show("results");
 
   if(mode===1){
@@ -705,9 +735,5 @@ document.addEventListener("keydown",e=>{
 
 document.getElementById("previewArt").innerHTML=scaleSVG(2300);
 </script>
-<script src="practice4-back-to-hub-local-v1.js?v=20260813a"></script>
-<script src="practice4-progress-local-v1.js?v=20260813a"></script>
-<script src="practice4-next-local-v3.js?v=20260813c"></script>
-<script src="practice4-next-local-v3.js?v=20260813b"></script>
 </body>
 </html>
