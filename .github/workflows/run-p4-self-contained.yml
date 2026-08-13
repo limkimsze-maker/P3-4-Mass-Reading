@@ -16,3 +16,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: python tools/make_p4_self_contained.py
+      - name: Confirm cleanup pass
+        run: echo "Final self-contained cleanup applied after disabling automatic shared-script injectors."
