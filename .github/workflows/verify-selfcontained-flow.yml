@@ -27,13 +27,14 @@ jobs:
           o=webdriver.ChromeOptions(); o.add_argument('--headless=new'); o.add_argument('--no-sandbox'); o.add_argument('--disable-dev-shm-usage'); o.add_argument('--window-size=1440,1100')
           d=webdriver.Chrome(options=o); w=WebDriverWait(d,30)
           try:
-            time.sleep(20)
+            time.sleep(5)
             d.get(f'https://limkimsze-maker.github.io/P3-4-Mass-Reading/?selfcontained={time.time()}')
             w.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'.modeBtn.one' if mode==1 else '.modeBtn.two'))).click()
             w.until(lambda x:x.execute_script('return questions.length')==total)
-            start=d.execute_script('return {TOTAL, len:questions.length, round, start:startGame.toString()};')
+            start=d.execute_script('return {TOTAL, len:questions.length, round, start:startGame.toString(), scripts:[...document.scripts].map(s=>s.src||"[inline]")};')
             print('START_STATE',start)
             assert 'ensureUniqueRoundQuestions' not in start['start']
+            assert not any('P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-' in s for s in start['scripts'])
             for i in range(total):
               q=d.execute_script('return questions[round];')
               assert q is not None, f'No question at round {i}'
